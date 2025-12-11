@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tracciamento in corso...</title>
+  <style>
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: "Courier New", monospace;
+      padding: 20px;
+    }
+    #terminal {
+      white-space: pre-wrap;
+      font-size: 16px;
+      border-left: 3px solid #0f0;
+      padding-left: 12px;
+    }
+    .blink {
+      animation: blink 1s step-start infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+  <div id="terminal">Inizializzazione sistemi di tracciamento...
+Caricamento moduli...
+
+</div>
+  <script>
+    const term = document.getElementById('terminal');
+
+    function print(line) {
+      term.textContent += line + "\n";
+    }
+
+    async function main() {
+      const res = await fetch('https://ip-api.com/json/?fields=status,message,country,regionName,city,zip,lat,lon,isp,query');
+      const data = await res.json();
+
+      print("Connessione rilevata.");
+      print("IP:");
+      print("   → " + data.query);
+
+      if (data.status === 'success') {
+        print("Localizzazione approssimativa:");
+        print("   → Paese:  " + data.country);
+        print("   → Regione: " + data.regionName);
+        print("   → Città:   " + data.city + " " + (data.zip || ""));
+        print("   → ISP:     " + data.isp);
+        print("Coordinate:");
+        print("   → Lat: " + data.lat);
+        print("   → Lon: " + data.lon);
+      } else {
+        print("Impossibile determinare la posizione.");
+      }
+
+      print("\nAnalisi completata.");
+      print("Monitoraggio attivo... ");
+    }
+
+    main();
+  </script>
+</body>
+</html>
