@@ -1,66 +1,153 @@
-<!doctype html>
-<html lang="it">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tracciamento in corso...</title>
-  <style>
+<meta charset="UTF-8">
+<title>Security Terminal</title>
+
+<style>
     body {
-      background: #000;
-      color: #0f0;
-      font-family: "Courier New", monospace;
-      padding: 20px;
+        background: black;
+        color: #00ff6a;
+        font-family: "Courier New", monospace;
+        padding: 20px;
+        overflow: hidden;
     }
-    #terminal {
-      white-space: pre-wrap;
-      font-size: 16px;
-      border-left: 3px solid #0f0;
-      padding-left: 12px;
+
+    .typing { 
+        border-right: .1em solid #00ff6a;
+        white-space: nowrap;
+        overflow: hidden;
     }
-    .blink {
-      animation: blink 1s step-start infinite;
+
+    #log {
+        margin-top: 20px;
+        font-size: 18px;
+        line-height: 1.4em;
+        height: 400px;
+        overflow-y: auto;
+        text-shadow: 0 0 8px #00ff6a;
     }
-    @keyframes blink { 50% { opacity: 0; } }
-  </style>
+
+    /* flicker effect */
+    @keyframes flicker {
+        0% {opacity: 1;}
+        50% {opacity: 0.85;}
+        100% {opacity: 1;}
+    }
+    body {
+        animation: flicker 0.15s infinite;
+    }
+
+    /* red alert screen flash */
+    .alertFlash {
+        animation: alert 0.2s infinite alternate;
+    }
+    @keyframes alert {
+        0% { background: black; }
+        100% { background: #400000; }
+    }
+</style>
 </head>
+
 <body>
-  <div id="terminal">Inizializzazione sistemi di tracciamento...
-Caricamento moduli...
 
-</div>
-  <script>
-    const term = document.getElementById('terminal');
+<audio id="siren" src="https://www.fesliyanstudios.com/play-mp3/438" preload="auto"></audio>
 
-    function print(line) {
-      term.textContent += line + "\n";
+<h1 class="typing" id="header"></h1>
+
+<div id="log"></div>
+
+<script>
+/* ---- typing effect ---- */
+function typeText(el, text, speed = 40) {
+    let i = 0;
+    function type() {
+        if (i < text.length) {
+            el.innerHTML += text.charAt(i);
+            i++;
+            setTimeout(type, speed);
+        }
     }
+    type();
+}
 
-    async function main() {
-      const res = await fetch('https://ip-api.com/json/?fields=status,message,country,regionName,city,zip,lat,lon,isp,query');
-      const data = await res.json();
+/* ---- alert siren ---- */
+function playAlarm() {
+    const s = document.getElementById("siren");
+    s.volume = 0.4;
+    s.play();
+    document.body.classList.add("alertFlash");
+}
 
-      print("Connessione rilevata.");
-      print("IP:");
-      print("   → " + data.query);
+/* ---- log printer ---- */
+function log(msg) {
+    const logBox = document.getElementById("log");
+    logBox.innerHTML += "> " + msg + "<br>";
+    logBox.scrollTop = logBox.scrollHeight;
+}
 
-      if (data.status === 'success') {
-        print("Localizzazione approssimativa:");
-        print("   → Paese:  " + data.country);
-        print("   → Regione: " + data.regionName);
-        print("   → Città:   " + data.city + " " + (data.zip || ""));
-        print("   → ISP:     " + data.isp);
-        print("Coordinate:");
-        print("   → Lat: " + data.lat);
-        print("   → Lon: " + data.lon);
-      } else {
-        print("Impossibile determinare la posizione.");
-      }
+/* ---- fake live tracking feed ---- */
+const fakeEvents = [
+    "Scanning external ports...",
+    "Checking DNS leaks...",
+    "Decrypting connection tokens...",
+    "Cross-referencing behavior patterns...",
+    "Analyzing packet signatures...",
+    "Injecting trace beacons...",
+    "Monitoring geolocation drift...",
+    "Intercepting system telemetry...",
+    "Mapping network topology...",
+    "Calculating risk score…",
+];
 
-      print("\nAnalisi completata.");
-      print("Monitoraggio attivo... ");
-    }
+function startFakeFeed() {
+    let i = 0;
+    setInterval(() => {
+        if (i < fakeEvents.length) {
+            log(fakeEvents[i]);
+            i++;
+        } else {
+            log("Tracking sequence running...");
+        }
+    }, 1000);
+}
 
-    main();
-  </script>
+/* ---- Real IP + GEO Lookup ---- */
+function startRealScan() {
+    fetch("https://api.ipify.org?format=json")
+        .then(r => r.json())
+        .then(data => {
+            log(`IP detected: ${data.ip}`);
+            return fetch(`https://ipapi.co/${data.ip}/json/`);
+        })
+        .then(r => r.json())
+        .then(loc => {
+            if (loc.error) {
+                log("Location: Unable to determine");
+            } else {
+                log(`Location: ${loc.city}, ${loc.region}, ${loc.country_name}`);
+                log(`ISP: ${loc.org}`);
+            }
+        })
+        .catch(() => {
+            log("ERROR: Unable to retrieve IP data.");
+        });
+}
+
+/* ---- Start sequence ---- */
+typeText(document.getElementById("header"), "INITIALIZING SECURITY TERMINAL...", 50);
+
+setTimeout(() => log("Loading tracking modules..."), 1300);
+setTimeout(() => log("Establishing secure uplink..."), 2500);
+setTimeout(() => log("Connection established."), 3500);
+
+setTimeout(() => {
+    playAlarm();
+    log("⚠ ALERT: Suspicious connection detected!");
+    startRealScan();
+    startFakeFeed();
+}, 4500);
+</script>
+
 </body>
 </html>
